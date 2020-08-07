@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"github.com/nori-io/interfaces/cache"
 	"time"
 )
@@ -17,7 +18,9 @@ func (i instance) Get(key []byte) ([]byte, error) {
 	val, err := i.client.Get(string(key)).Result()
 	if err != nil {
 		if err.Error() == "redis: nil" {
-			return []byte{}, cache.CacheKeyNotFound
+			//return []byte{}, cache.CacheKeyNotFound
+			return []byte{}, errors.New("CacheKeyNotFound")
+
 		}
 		return []byte{}, err
 	}

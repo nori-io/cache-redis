@@ -66,7 +66,7 @@ func (p *service) Meta() meta.Meta {
 			Name: "Nori: Redis Cache",
 		},
 		Core: meta.Core{
-			VersionConstraint: ">=1.0.0, <2.0.0",
+			VersionConstraint: "^0.2.0",
 		},
 		Interface: cache.CacheInterface,
 		License: []meta.License{
@@ -80,7 +80,7 @@ func (p *service) Meta() meta.Meta {
 			Type: "git",
 			URI:  "https://github.com/nori-io/cache-redis",
 		},
-		Tags: []string{"cache", "redis"},
+		Tags: []string{"cache", "redis", "cache-redis"},
 	}
 
 }

@@ -15,44 +15,35 @@ package main
 
 import (
 	"context"
+	rediscache "github.com/nori-io/cache-redis/internal/cache"
 	"github.com/nori-io/common/v3/config"
 	"github.com/nori-io/common/v3/logger"
 	"github.com/nori-io/common/v3/meta"
 	"github.com/nori-io/common/v3/plugin"
-	 "github.com/nori-io/interfaces/cache"
-
-	"github.com/go-redis/redis"
+	"github.com/nori-io/interfaces/nori/cache"
 )
 
-
 type service struct {
-	instance *instance
-	config *pluginConfig
-	logger logger.FieldLogger
-
-
+	instance *rediscache.Instance
+	config   *pluginConfig
+	logger   logger.FieldLogger
 }
 
 type pluginConfig struct {
-	address     string
+	address  string
 	password string
-	db  int
-}
-
-type instance struct {
-	client *redis.Client
+	db       int
 }
 
 var (
 	Plugin plugin.Plugin = &service{}
 )
 
-
 func (p *service) Init(ctx context.Context, config config.Config, log logger.FieldLogger) error {
 	p.logger = log
-	p.config.address = config.String("redis.address", "")()
-	p.config.password = config.String("redis.password", "")()
-	p.config.db = config.Int("redis.database", "")()
+	p.config.address = config.String("cache.redis.address", "")()
+	p.config.password = config.String("cache.redis.password", "")()
+	p.config.db = config.Int("cache.redis.database", "")()
 	return nil
 }
 
@@ -84,43 +75,36 @@ func (p *service) Meta() meta.Meta {
 				Type:  "GPLv3",
 				URI:   "https://www.gnu.org/licenses/"},
 		},
-		Links:      nil,
+		Links: nil,
 		Repository: meta.Repository{
 			Type: "git",
 			URI:  "https://github.com/nori-io/cache-redis",
 		},
-		Tags:       []string{"cache", "redis"},
+		Tags: []string{"cache", "redis"},
 	}
 
 }
 
 func (p *service) Start(ctx context.Context, registry plugin.Registry) error {
+
 	if p.instance == nil {
 
-		instance := &instance{
-			client: redis.NewClient(&redis.Options{
-				Addr:     p.config.address,
-				Password: p.config.password,
-				DB:       p.config.db,
-			}),
-		}
+		instance, err := rediscache.New(&rediscache.Config{
+			Address:  p.config.address,
+			Password: p.config.password,
+			DB:       p.config.db,
+		})
 
-		_, err := instance.client.Ping().Result()
-		if err != nil {
-			instance.client.Close()
-			p.instance = nil
-			return err
+		if err == nil {
+			p.instance = instance
 		}
-
-		p.instance = instance
 	}
 	return nil
 }
 
 func (p *service) Stop(ctx context.Context, registry plugin.Registry) error {
-	//err := p.instance.(*instance).client.Close()
-	err:=p.instance.client.Close()
-	if err!=nil{
+	err := p.instance.Close()
+	if err != nil {
 		p.logger.Error(err.Error())
 	}
 
@@ -128,4 +112,3 @@ func (p *service) Stop(ctx context.Context, registry plugin.Registry) error {
 
 	return err
 }
-

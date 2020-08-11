@@ -1,26 +1,26 @@
 package cache
 
 import (
-	"errors"
 	"time"
 
 	"github.com/go-redis/redis"
+	"github.com/nori-io/interfaces/nori/cache"
 )
 
 type Instance struct {
-	client *redis.Client
+	client redis.UniversalClient
 }
 
 type Config struct {
-	Address  string
+	Address  []string
 	Password string
 	DB       int
 }
 
 func New(conf *Config) (*Instance, error) {
 	instance := &Instance{
-		client: redis.NewClient(&redis.Options{
-			Addr:     conf.Address,
+		client: redis.NewUniversalClient(&redis.UniversalOptions{
+			Addrs:    conf.Address,
 			Password: conf.Password,
 			DB:       conf.DB,
 		}),
@@ -48,10 +48,8 @@ func (i *Instance) Delete(key []byte) error {
 func (i *Instance) Get(key []byte) ([]byte, error) {
 	val, err := i.client.Get(string(key)).Result()
 	if err != nil {
-		if err.Error() == "redis: nil" {
-			//return []byte{}, cache.CacheKeyNotFound
-			return []byte{}, errors.New("CacheKeyNotFound")
-
+		if err == redis.Nil {
+			return []byte{}, cache.CacheKeyNotFound
 		}
 		return []byte{}, err
 	}

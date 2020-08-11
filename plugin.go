@@ -15,6 +15,7 @@ package main
 
 import (
 	"context"
+
 	rediscache "github.com/nori-io/cache-redis/internal/cache"
 	"github.com/nori-io/common/v3/config"
 	"github.com/nori-io/common/v3/logger"
@@ -30,9 +31,9 @@ type service struct {
 }
 
 type pluginConfig struct {
-	address  string
-	password string
-	db       int
+	addresses []string
+	password  string
+	db        int
 }
 
 var (
@@ -41,7 +42,7 @@ var (
 
 func (p *service) Init(ctx context.Context, config config.Config, log logger.FieldLogger) error {
 	p.logger = log
-	p.config.address = config.String("cache.redis.address", "")()
+	p.config.addresses = config.SliceString("cache.redis.address", "")()
 	p.config.password = config.String("cache.redis.password", "")()
 	p.config.db = config.Int("cache.redis.database", "")()
 	return nil
@@ -90,7 +91,7 @@ func (p *service) Start(ctx context.Context, registry plugin.Registry) error {
 	if p.instance == nil {
 
 		instance, err := rediscache.New(&rediscache.Config{
-			Address:  p.config.address,
+			Address:  p.config.addresses,
 			Password: p.config.password,
 			DB:       p.config.db,
 		})

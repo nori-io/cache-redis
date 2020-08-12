@@ -53,7 +53,7 @@ func (p *service) Instance() interface{} {
 }
 
 func (p *service) Meta() meta.Meta {
-	return &meta.Data{
+	return meta.Data{
 		ID: meta.ID{
 			ID:      "nori/cache/redis",
 			Version: "1.0.0",
@@ -64,7 +64,8 @@ func (p *service) Meta() meta.Meta {
 		},
 		Dependencies: []meta.Dependency{},
 		Description: meta.Description{
-			Name: "Nori: Redis Cache",
+			Name:        "Nori: Redis Cache",
+			Description: "",
 		},
 		Core: meta.Core{
 			VersionConstraint: "^0.2.0",
@@ -76,21 +77,20 @@ func (p *service) Meta() meta.Meta {
 				Type:  "GPLv3",
 				URI:   "https://www.gnu.org/licenses/"},
 		},
-		Links: nil,
+		Links: []meta.Link{},
 		Repository: meta.Repository{
 			Type: "git",
 			URI:  "https://github.com/nori-io/cache-redis",
 		},
 		Tags: []string{"cache", "redis", "cache-redis"},
 	}
-
 }
 
 func (p *service) Start(ctx context.Context, registry plugin.Registry) error {
 
 	if p.instance == nil {
 
-		instance, err := rediscache.New(&rediscache.Config{
+		instance, err := rediscache.New(rediscache.Config{
 			Address:  p.config.addresses,
 			Password: p.config.password,
 			DB:       p.config.db,
@@ -98,12 +98,15 @@ func (p *service) Start(ctx context.Context, registry plugin.Registry) error {
 
 		if err == nil {
 			p.instance = instance
+		} else {
+			return err
 		}
 	}
 	return nil
 }
 
 func (p *service) Stop(ctx context.Context, registry plugin.Registry) error {
+
 	err := p.instance.Close()
 	if err != nil {
 		p.logger.Error(err.Error())

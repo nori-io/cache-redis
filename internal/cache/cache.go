@@ -17,7 +17,7 @@ type Config struct {
 	DB       int
 }
 
-func New(conf *Config) (*Instance, error) {
+func New(conf Config) (*Instance, error) {
 	instance := &Instance{
 		client: redis.NewUniversalClient(&redis.UniversalOptions{
 			Addrs:    conf.Address,
